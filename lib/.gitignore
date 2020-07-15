@@ -1,0 +1,6 @@
+# ignore so
+*.so
+# ignore build
+build/
+tmp/
+.eggs/ 
