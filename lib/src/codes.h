@@ -11,6 +11,7 @@
 #include <queue>
 #include <climits>
 #include <memory>
+#include <utility>
 
 #include <iostream>
 
@@ -50,6 +51,7 @@ class Code{
         bool isOrthogonal(Code& other);
         std::string toString();
         xlong minDistance();
+        Code findOrthogonal();
 };
 
 class CodeGenerator {
@@ -62,7 +64,8 @@ class CodeGenerator {
 
     public:
     CodeGenerator(size_t n_, size_t k_, size_t nu_);
-    Code next();
+    std::pair<std::shared_ptr<Code>, bool> next_candidate();
+    std::shared_ptr<Code> next();
 };
 
 }

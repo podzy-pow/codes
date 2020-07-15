@@ -62,6 +62,7 @@ PYBIND11_MODULE(codeslib, m){
         .def_readonly("k", &Code::k)
         .def_readwrite("generators", &Code::generators)
         .def("__repr__", &Code::toString)
+        .def("findOrthogonal", &Code::findOrthogonal)
     ;
 
     py::class_<SearchSelfOrthogonal>(m, "SearchSelfOrthogonal")
@@ -70,10 +71,5 @@ PYBIND11_MODULE(codeslib, m){
         .def_property_readonly("n", &SearchSelfOrthogonal::getN)
         .def_property_readonly("degree", &SearchSelfOrthogonal::getDegree)
         .def("find", &SearchSelfOrthogonal::find)
-    ;
-
-    py::class_<CodeGenerator>(m, "CodeGenerator")
-        .def(py::init<size_t, size_t, size_t>())
-        .def("next", &CodeGenerator::next)
     ;
 }

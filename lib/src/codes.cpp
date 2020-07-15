@@ -1,5 +1,8 @@
 #include "codes.h"
 
+#define LOG(msg) \
+    std::cout << __FILE__ << "(" << __LINE__ << "): " << msg << std::endl 
+
 using namespace cppcodes;
 
 void Combinations::generate(size_t i, size_t j){
@@ -85,7 +88,7 @@ bool Code::isOrthogonal(Code& other){
         for (size_t j = 0; j < other.k; ++j){
             Series s;
             size_t jj = j*n;
-            for (size_t ii = i*n; ii < (i+1)*n; ++i, ++jj){
+            for (size_t ii = i*n; ii < (i+1)*n; ++ii, ++jj){
                 s = s + generators[ii].inverse().conj() * other.generators[jj];
             }
             s.strip();
@@ -197,6 +200,20 @@ std::string Code::toString() {
     return s;
 }
 
+Code Code::findOrthogonal() {
+    if (k != 1)
+        throw new std::logic_error("Not implemented for k > 1");
+    size_t nu = maxSize(0) - 1;
+    CodeGenerator code_generator(n, n-k, nu);
+    std::shared_ptr<Code> c;
+    while ((c = code_generator.next()) != nullptr){
+        if (isOrthogonal(*c)){
+            return *c;
+        }
+    }
+    return Code(0);
+}
+
 CodeGenerator::CodeGenerator(size_t n_, size_t k_, size_t nu_)
 : n(n_) 
 , k(k_)
@@ -207,8 +224,7 @@ CodeGenerator::CodeGenerator(size_t n_, size_t k_, size_t nu_)
     degrees = Combinations(nu + k, k).get();
 }
 
-// std::shared_ptr<Code> next(){
-Code CodeGenerator::next() {
+std::pair<std::shared_ptr<Code>, bool> CodeGenerator::next_candidate() {
     if (current_degree_split >= degrees->size()){
         current_degree_split = 0;
         bool carry = true;
@@ -218,23 +234,37 @@ Code CodeGenerator::next() {
             --i;
         }
         if (carry)
-            return Code(0, 0);
+            return std::make_pair<>(nullptr, true);
     }
 
-    Code code(n, k);// = std::make_shared<Code>(n, k);
+    auto code = std::make_shared<Code>(n, k);
     
     auto& v(degrees->at(current_degree_split));
     size_t i = 0;
     for (auto x = v.begin(); x != v.end(); ++x) {
+        bool valid = false;
         for (size_t _i = 0; _i < n; ++_i){
             Series s;
             s.coeffs.pop_back();
             for (size_t j = 0; j < *x; ++j, ++i)
                 s.coeffs.push_back(current_code[i]);
-            code.generators.push_back(s);
+            valid = valid || s.coeffs.back() != 0;
+            code->generators.push_back(s);
+        }
+        if (!valid) {
+            // this is not a valid code, continue the search
+            // the degree is less than anticipated
+            current_degree_split += 1;
+            return std::make_pair<>(nullptr, false);
         }
     }
-    
+
     current_degree_split += 1;
-    return code;
+    return std::make_pair<>(code, true);
+}
+
+std::shared_ptr<Code> CodeGenerator::next() {
+    std::pair<std::shared_ptr<Code>, bool> c;
+    while (!(c = next_candidate()).second);
+    return c.first;
 }
