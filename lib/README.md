@@ -20,5 +20,7 @@ False
 True
 >> c.minDistance()
 6
+>> c.findOrthogonal()
+00|1v|uv||1|v|u
  ```
  
