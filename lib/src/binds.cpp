@@ -63,6 +63,7 @@ PYBIND11_MODULE(codeslib, m){
         .def_readwrite("generators", &Code::generators)
         .def("__repr__", &Code::toString)
         .def("findOrthogonal", &Code::findOrthogonal)
+        .def("isOrthogonal", &Code::isOrthogonal)
     ;
 
     py::class_<SearchSelfOrthogonal>(m, "SearchSelfOrthogonal")

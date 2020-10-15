@@ -46,11 +46,13 @@ class Code{
         void add(Series& g);
         void remove(size_t i);
         bool validate();
+        size_t maxSize();
         size_t maxSize(size_t i);
         bool isSelfOrthogonal();
         bool isOrthogonal(Code& other);
         std::string toString();
         xlong minDistance();
+        Code findOrthogonalOld();
         Code findOrthogonal();
 };
 
