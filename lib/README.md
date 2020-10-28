@@ -47,11 +47,11 @@ True
 00|1v|uv||1|v|u
  ```
 
-1/3-code search with degree of 6
+1/3-code search with degree of 4
 
  ```python
 from codeslib import *
-s = SearchSelfOrthogonal(3, 6)
+s = SearchSelfOrthogonal(3, 4)
 codes = s.find()
 codes.sort(key=lambda c: c.weight())
 print('Codes found, searching for optimal ones')
