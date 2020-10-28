@@ -47,7 +47,7 @@ True
 00|1v|uv||1|v|u
  ```
 
-1/3-code search for with degree of 6
+1/3-code search with degree of 6
 
  ```python
 from codeslib import *
