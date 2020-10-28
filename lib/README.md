@@ -23,4 +23,34 @@ True
 >> c.findOrthogonal()
 00|1v|uv||1|v|u
  ```
- 
+
+1/3-code search for with degree of 6
+
+ ```python
+from codeslib import *
+s = SearchSelfOrthogonal(3, 6)
+codes = s.find()
+codes.sort(key=lambda c: c.weight())
+print('Codes found, searching for optimal ones')
+print('Total number of codes:', len(codes))
+vlist = []
+for i, code in enumerate(codes):
+    orth_code = code.findOrthogonal()
+    u, v = orth_code.minDistance(), code.minDistance()
+    if u != 0:
+        vlist.append((u, v))
+
+miu, mau = min(x for x, y in vlist), max(x for x, y in vlist)
+miv, mav = min(y for x, y in vlist), max(y for x, y in vlist)
+
+table = [[0] * (mav-miv+1) for _ in range(miu, mau+1)]
+
+for x, y in vlist:
+    table[x-miu][y-miv] += 1
+
+s = ' ' * 5 + '||' + ' | '.join('{:5}'.format(x) for x in range(miv, mav+1))
+print(s)
+print('-' * len(s))
+for i, row in enumerate(table):
+    print('{:5}||'.format(miu + i) + ' | '.join('{:5}'.format(x) for x in row))
+``` 
