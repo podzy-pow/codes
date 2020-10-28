@@ -3,8 +3,31 @@ build requires `pybind11` version >= 2.5.
 ```
  python setup.py build_ext --inplace
  ```
+ 
+ # Galois field(GF) 4
+The library operates with codes in GF4, denoting w=u and w̄=v of traditional notation. The tables of operations in the field are
+<table>
+<tr><td>
 
- # usage example
+|x|0|1|w|w̄|
+|-|-|-|-|-|
+|0|0|0|0|0|
+|1|0|1|w|w̄|
+|w|0|w|w̄|1|
+|w̄|0|w̄|1|w|
+
+</td><td>
+
+|+|0|1|w|w̄|
+|-|-|-|-|-|
+|0|0|1|w|w̄|
+|1|1|0|w̄|w|
+|w|w|w̄|0|1|
+|w̄|w̄|w|1|0|
+
+</td></tr> </table>
+
+ # Usage example
 
  ```python
 >> from codeslib import *
