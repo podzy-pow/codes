@@ -6,6 +6,7 @@
 #include "codes.h"
 #include "series.h"
 #include "gf4.h"
+#include <iostream>
 
 namespace cppcodes{
 class SearchSelfOrthogonal{
@@ -17,7 +18,7 @@ private:
     std::unordered_multimap<Series, std::shared_ptr<std::vector<Series>>, SeriesHasher> Rgg;
     std::vector<Code> codes;
 public:
-    SearchSelfOrthogonal(size_t n_, size_t degree_, size_t k_ = 1)
+    SearchSelfOrthogonal(size_t n_, size_t degree_, size_t k_=1)
     : warm(false)
     , n(n_)
     , degree(degree_)
@@ -65,9 +66,34 @@ public:
         warm = true;
     }
 
+    bool order_check(Code& c){
+        for (size_t j = 1; j < c.n; ++j)
+            if (!(c.generators[j - 1] < c.generators[j])){
+                return false;
+            }
+        for (size_t j = 1; j < c.k; ++j)
+            if (!(c.generators[(j - 1) * c.n] < c.generators[j * c.n])){
+                return false;
+            }
+        if (c.generators[0].conj() < c.generators[0]){
+            return false;
+        }
+        bool nonzero = false;
+        for (auto& g: c.generators){
+            if (g.coeffs[g.coeffs.size() - 1] != 0){
+                nonzero = true;
+                break;
+            }
+        }
+        return nonzero;
+    }
+
     void append(const std::vector<Series>& rgg, std::vector<Series>& code, size_t i){
         if (i == n) {
-            //codes.push_back(Code(code, n, k));
+            Code c(code, n, k);
+            if (order_check(c)){
+                codes.push_back(c);
+            }
         } else {
             auto v = Rgg.find(rgg[i])->second;
             for (auto it = v->begin(); it != v->end(); ++it){

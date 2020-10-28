@@ -118,6 +118,20 @@ class Series{
             return s;
         };
 
+        bool operator<(const Series& o){
+            if (this == &o){
+                return false;
+            }
+            if (zero_shift < o.zero_shift){
+                return true;
+            }
+            for (size_t i = 0; i < coeffs.size() && i < o.coeffs.size(); ++i)
+                if (coeffs[i] != o.coeffs[i]){
+                    return coeffs[i].value < o.coeffs[i].value;
+                }
+            return coeffs.size() < o.coeffs.size();
+        }
+
         Series inverse() const {
             Series s(*this);
             std::reverse(s.coeffs.begin(), s.coeffs.end());

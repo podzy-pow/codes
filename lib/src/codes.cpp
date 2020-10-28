@@ -1,7 +1,9 @@
 #include "codes.h"
+#include <cstdlib>
 
 #define LOG(msg) \
     std::cerr << __FILE__ << "(" << __LINE__ << "): " << msg << std::endl 
+#define DEBUG 0
 
 using namespace cppcodes;
 
@@ -76,17 +78,20 @@ size_t Code::maxSize(){
     return size;
 }
 
-bool Code::isSelfOrthogonal(){
-    if (k != 1)
-        throw new std::logic_error("Not implemented for k > 1");
-    Series s;
-    for (size_t i = 0; i < n; ++i){
-        s = s + generators[i].inverse().conj() * generators[i];
+size_t Code::weight(){
+    size_t w = 0;
+    for(auto& g: generators){
+        for (auto& c: g.coeffs){
+            if (c != 0){
+                ++w;
+            }
+        }
     }
-    s.strip();
-    if (s.coeffs.size() == 1 && s.coeffs[0] == 0)
-        return true;
-    return false;
+    return w;
+}
+
+bool Code::isSelfOrthogonal(){
+    return isOrthogonal(*this);
 }
 
 bool Code::isOrthogonal(Code& other){
@@ -161,6 +166,17 @@ xlong Code::minDistance(){
                     }
                     if (!(s == 0))
                         t += 1;
+                }
+
+                if (DEBUG && (nextv == 0)){
+                    for (size_t i = 0; i < k; ++i)
+                        std::cerr << step[i].toString() << " ";
+                    std::cerr << std::endl;
+                    for (size_t i = 0; i < k; ++i){
+                        for (size_t j = 0; j < state[i].size(); ++j)
+                            std::cerr << state[i][j].toString();
+                        std::cerr << std::endl;
+                    }
                 }
                 
                 auto u = d.find(nextv);
@@ -294,15 +310,18 @@ Code Code::findOrthogonal(){
         other_degrees[j] += 1;
     }
 
-    for (size_t j = 0; j < other_k; ++j)
-        std::cerr<< other_degrees[j] << " ";
-    std::cerr << std::endl;
-
+    if (DEBUG){
+        for (size_t j = 0; j < other_k; ++j)
+            std::cerr<< other_degrees[j] << " ";
+        std::cerr << std::endl;
+    }
 
     // define index of each coefficient of the orthogonal system 
     // in system of linear equations as shift + index in generator
     std::vector<size_t> coeffs_shifts;
-    std::cerr << "other_k: " << other_k << " " << "n: " << n << std::endl;
+    if (DEBUG){
+        std::cerr << "other_k: " << other_k << " " << "n: " << n << std::endl;
+    }
     size_t M = 0;
     for (size_t i = 0; i < other_k; ++i){
         for (size_t j = 0; j < n; ++j){
@@ -340,11 +359,15 @@ Code Code::findOrthogonal(){
         }
     }
 
-    for (size_t i = 0; i < N; ++i){
-        for (size_t j = 0; j < M; ++j){
-            std::cerr << linear_system[i][j].toString() << " ";
+    if (DEBUG){
+        std::cerr << "---" << std::endl;
+        for (size_t i = 0; i < N; ++i){
+            for (size_t j = 0; j < M; ++j){
+                std::cerr << linear_system[i][j].toString() << " ";
+            }
+            std::cerr << std::endl;
         }
-        std::cerr << std::endl;
+        std::cerr << "---" << std::endl;
     }
 
     // Upper-triangle
@@ -383,77 +406,75 @@ Code Code::findOrthogonal(){
         }
 
         ++most_left;
+        if (most_left == M)
+            break;
     }
 
-    std::cerr << "After getting to upper-triangle" << std::endl;
-    for (size_t i = 0; i < N; ++i){
-        for (size_t j = 0; j < M; ++j){
-            std::cerr << linear_system[i][j].toString() << " ";
+    if (DEBUG){
+        std::cerr << "After getting to upper-triangle" << std::endl;
+        for (size_t i = 0; i < N; ++i){
+            for (size_t j = 0; j < M; ++j){
+                std::cerr << linear_system[i][j].toString() << " ";
+            }
+            std::cerr << std::endl;
         }
-        std::cerr << std::endl;
     }
 
     // Assign values. What is the right way?
     std::vector<gf4> values;
     std::vector<bool> assigned;
-    char Z = 1;
     for (size_t i = 0; i < M; ++i){
         values.push_back(gf4());
         assigned.push_back(false);
     }
-    for (size_t ii = 0; ii < N; ++ii){
-        size_t i = N - ii - 1;
-        size_t most_left = 0;
-        while (most_left < M && linear_system[i][most_left] == 0){
-            ++most_left;
-        }
-        if (most_left == M){
-            continue;
-        }
-        gf4 v = 0;
-        for (size_t j = most_left + 1; j < M; ++j){
-            if (!assigned[j]){
-                // Here we need to make sure 
-                // that generators are linearly independent(!)
-                // This is not a good way.
-                values[j] = gf4(Z);
-                Z = Z + 1;
-                if (Z == 4)
-                    Z = 0;
-                assigned[j] = true;
+    srand(M); // just a fixed initializer
+    for(int z__= 0;; ++z__){ 
+        for (size_t ii = 0; ii < N; ++ii){
+            size_t i = N - ii - 1;
+            size_t most_left = 0;
+            while (most_left < M && linear_system[i][most_left] == 0){
+                ++most_left;
             }
-            v = v + linear_system[i][j] * values[j];
-        }
-        values[most_left] = v;
-        assigned[most_left] = true;
-    }
-
-    std::cerr << "Found vector" << std::endl;
-    for (size_t i = 0; i < M; ++i)
-        std::cerr << values[i].toString() << " ";
-    std::cerr << std::endl;
-
-    std::cerr << "Verification" << std::endl;
-    for (size_t i = 0; i < N; ++i){
-        gf4 v = 0;
-        for (size_t j = 0; j < M; ++j)
-            v = v + values[j] * linear_system[i][j];
-        std::cerr << "i: " << i << ", v: " << v.toString() << std::endl;
-    }
-    
-    std::vector<Series> series;
-    for (size_t i = 0; i < other_k; ++i){
-        for (size_t j = 0; j < n; ++j){
-            std::vector<gf4> gen_coeffs;
-            size_t jj = coeffs_shifts[i * n + j];
-            for (size_t ii = 0; ii <= other_degrees[i]; ++ii, ++jj){
-                gen_coeffs.push_back(values[jj]);
+            if (most_left == M){
+                continue;
             }
-            series.push_back(Series(gen_coeffs));
+            gf4 v = 0;
+            for (size_t j = most_left + 1; j < M; ++j){
+                if (!assigned[j]){
+                    // Here we need to make sure 
+                    // that generators are linearly independent(!)
+                    // This is not a good way.
+                    values[j] = gf4(rand() % 4);
+                    assigned[j] = true;
+                }
+                v = v + linear_system[i][j] * values[j];
+            }
+            values[most_left] = v;
+            assigned[most_left] = true;
+        }
+        // check if generators are linearly independent
+        std::vector<Series> series;
+        for (size_t i = 0; i < other_k; ++i){
+            for (size_t j = 0; j < n; ++j){
+                std::vector<gf4> gen_coeffs;
+                size_t jj = coeffs_shifts[i * n + j];
+                for (size_t ii = 0; ii <= other_degrees[i]; ++ii, ++jj){
+                    gen_coeffs.push_back(values[jj]);
+                }
+                series.push_back(Series(gen_coeffs));
+            }
+        }
+        Code c(series, n, other_k);;
+        if ((c.minDistance() != 0) || (z__ == 100)){
+            return c;
+        }
+        if (DEBUG){
+            std::cerr << c.toString() << std::endl;
+            std::cerr << "retry" << std::endl;
+        }
+        for (size_t i = 0; i < M; ++i){
+            values[i] = gf4(0);
+            assigned[i] = false;
         }
     }
-    
-    return Code(series, n, other_k);
 }
-
-

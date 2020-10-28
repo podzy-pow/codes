@@ -64,6 +64,7 @@ PYBIND11_MODULE(codeslib, m){
         .def("__repr__", &Code::toString)
         .def("findOrthogonal", &Code::findOrthogonal)
         .def("isOrthogonal", &Code::isOrthogonal)
+        .def("weight", &Code::weight)
     ;
 
     py::class_<SearchSelfOrthogonal>(m, "SearchSelfOrthogonal")

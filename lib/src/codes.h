@@ -48,6 +48,7 @@ class Code{
         bool validate();
         size_t maxSize();
         size_t maxSize(size_t i);
+        size_t weight();
         bool isSelfOrthogonal();
         bool isOrthogonal(Code& other);
         std::string toString();
